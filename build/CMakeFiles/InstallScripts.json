@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Personal Projects/GLEngine/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
