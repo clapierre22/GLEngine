@@ -6,7 +6,7 @@
 static void RenderScene() 
 {
     static GLclampf z = 0.0f;
-    glClearColor(10.0f, z, z, 10.0f);
+    glClearColor(z, z, z, z);
     printf("%f\n", z);
     glClear(GL_COLOR_BUFFER_BIT);
     glutSwapBuffers();
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     glutDisplayFunc(RenderScene);
     
-    glutMainLoop(); // This was missing!
+    glutMainLoop();
 
     return 0;
 }
