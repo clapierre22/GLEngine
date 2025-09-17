@@ -6,7 +6,8 @@
 #include <GL/glut.h>
 
 // #define SIDE
-#define ROTATE
+// #define ROTATE
+#define SCALE
 
 GLuint VBO;
 GLint Location;
@@ -30,7 +31,7 @@ static void RenderScene()
     static float scale = 0.0f;
     static float delta = 0.001f;
 
-    #ifdef SIDE
+    #if defined(SIDE) || defined(SCALE)
         scale += delta;
         if ((scale >= 1.0f) || (scale <= -1.0f))
         {
@@ -88,6 +89,29 @@ static void RenderScene()
         Translation.m[2][0] = 0.0f;
         Translation.m[2][1] = 0.0f;
         Translation.m[2][2] = 1.0f;
+        Translation.m[2][3] = 0.0f;
+
+        Translation.m[3][0] = 0.0f;
+        Translation.m[3][1] = 0.0f;
+        Translation.m[3][2] = 0.0f;
+        Translation.m[3][3] = 1.0f;
+    #endif
+
+    // Scaling
+    #ifdef SCALE
+        Translation.m[0][0] = sinf(scale);
+        Translation.m[0][1] = 0.0f;
+        Translation.m[0][2] = 0.0f;
+        Translation.m[0][3] = 0.0f;
+
+        Translation.m[1][0] = 0.0f;
+        Translation.m[1][1] = sinf(scale);
+        Translation.m[1][2] = 0.0f;
+        Translation.m[1][3] = 0.0f;
+
+        Translation.m[2][0] = 0.0f;
+        Translation.m[2][1] = 0.0f;
+        Translation.m[2][2] = sinf(scale);
         Translation.m[2][3] = 0.0f;
 
         Translation.m[3][0] = 0.0f;
