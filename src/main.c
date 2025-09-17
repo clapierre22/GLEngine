@@ -8,12 +8,17 @@
 GLuint VBO;
 GLint ScaleLocation;
 
-typedef struct Vector3f;
+// typedef struct Vector3f;
 
 typedef struct 
 {
     float x, y, z;
 } Vector3f;
+
+typedef struct
+{
+    float m[4][4];
+} Matrix4f;
 
 static void RenderScene() 
 {
@@ -28,7 +33,31 @@ static void RenderScene()
         delta *= -1.0f;
     }
 
-    glUniform1f(ScaleLocation, scale);
+    Matrix4f Translation;
+
+    Translation.m[0][0] = 1.0f;
+    Translation.m[0][1] = 0.0f;
+    Translation.m[0][2] = 0.0f;
+    Translation.m[0][3] = sinf(scale);
+
+    Translation.m[1][0] = 0.0f;
+    Translation.m[1][1] = 1.0f;
+    Translation.m[1][2] = 0.0f;
+    Translation.m[1][3] = 0.0f;
+
+    Translation.m[2][0] = 0.0f;
+    Translation.m[2][1] = 0.0f;
+    Translation.m[2][2] = 1.0f;
+    Translation.m[2][3] = 0.0f;
+
+    Translation.m[3][0] = 0.0f;
+    Translation.m[3][1] = 0.0f;
+    Translation.m[3][2] = 0.0f;
+    Translation.m[3][3] = 1.0f;
+
+    // glUniform1f(ScaleLocation, scale);
+
+    glUniformMatrix4fv(ScaleLocation, 1, GL_TRUE, &Translation.m[0][0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
