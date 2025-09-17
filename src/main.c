@@ -179,6 +179,9 @@ static void CompileShaders()
         exit(1);
     }
 
+    free(vs);
+    free(fs);
+
     glUseProgram(ShaderProgram);
 }
 
