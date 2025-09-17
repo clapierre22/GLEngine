@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -14,12 +16,6 @@ typedef struct
 
 static void RenderScene() 
 {
-    // static GLclampf z = 0.0f;
-    // glClearColor(z, z, z, z);
-    // printf("%f\n", z);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // glutSwapBuffers();
-
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -56,6 +52,136 @@ static void CreateVertexBuffer()
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 }
 
+static void AddShader(GLuint ShaderProgram, const char* ShaderText, GLenum ShaderType)
+{
+    GLuint ShaderObj = glCreateShader(ShaderType);
+
+    if (ShaderObj == 0)
+    {
+        fprintf(stderr, "Eroor creating shader type %d\n", ShaderType);
+        exit(1);
+    }
+
+    const GLchar* p[1];
+    p[0] = ShaderText;
+
+    GLint Lengths[1];
+    Lengths[0] = (GLint)strlen(ShaderText);
+
+    glShaderSource(ShaderObj, 1, p, Lengths);
+
+    glCompileShader(ShaderObj);
+
+    GLint success;
+    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &success);
+
+    if (!success)
+    {
+        GLchar InfoLog[1024];
+        glGetShaderInfoLog(ShaderObj, 1024, NULL, InfoLog);
+        fprintf(stderr, "Error compiling shder type %d: %s\n", ShaderType, InfoLog);
+        exit(1);
+    }
+
+    glAttachShader(ShaderProgram, ShaderObj);
+}
+
+// Global shader variables
+const char* VSFilename = "shader.vs";
+const char* FSFilename = "shader.fs";
+
+static void CompileShaders()
+{
+    GLuint ShaderProgram = glCreateProgram();
+
+    if (ShaderProgram == 0)
+    {
+        fprintf(stderr, "Error creating shader program\n");
+        exit(1);
+    }
+
+    char *vs = NULL, *fs = NULL;
+
+    // Vertex Shader
+    FILE* vsf = fopen(VSFilename, "r");
+    
+    if (vsf == NULL)
+    {
+        fprintf(stderr, "Error opening file %s\n", VSFilename);
+        exit(1);
+    }
+
+    fseek(vsf, 0, SEEK_END);
+    long vss = ftell(vsf); // VS size
+    fseek(vsf, 0, SEEK_SET);
+
+    vs = malloc(vss + 1);
+
+    if (vs == NULL)
+    {
+        fclose(vsf);
+        fprintf(stderr, "Error allocating memory\n");
+        exit(1);
+    }
+
+    fread(vs, 1, vss, vsf);
+    vs[vss] = '\0'; // Add endline character
+    fclose(vsf);
+
+    AddShader(ShaderProgram, vs, GL_VERTEX_SHADER);
+
+    // Fragment Shader
+    FILE* fsf = fopen(FSFilename, "r");
+
+    if (fsf == NULL)
+    {
+        fprintf(stderr, "Error opening file %s", FSFilename);
+        exit(1);
+    }
+
+    fseek(fsf, 0, SEEK_END);
+    long fss = ftell(fsf); // FS size
+    fseek(fsf, 0, SEEK_SET);
+
+    fs = malloc(fss + 1);
+
+    if (fs == NULL)
+    {
+        fprintf(stderr, "Error allocating memory\n");
+        exit(1);
+    }
+
+    fread(fs, 1, fss, fsf);
+    fs[fss] = '\0'; // Add endline character
+    fclose(fsf);
+
+    AddShader(ShaderProgram, fs, GL_FRAGMENT_SHADER);
+
+    glLinkProgram(ShaderProgram);
+
+    GLint success;
+    GLchar ErrorLog[1024];
+
+    glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+        fprintf(stderr, "Error linking shader program: %s\n", ErrorLog);
+        exit(1);
+    }
+
+    glValidateProgram(ShaderProgram); // If multiple shaders, states then call after every call to draw()
+    glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+        fprintf(stderr, "Error linking shader program: %s\n", ErrorLog);
+        exit(1);
+    }
+
+    glUseProgram(ShaderProgram);
+}
+
 int main(int argc, char* argv[]) 
 {
     printf("Good Build\n");
@@ -85,6 +211,8 @@ int main(int argc, char* argv[])
     glClearColor(Red, Green, Blue, Alpha);
 
     CreateVertexBuffer();
+
+    CompileShaders();
 
     glutDisplayFunc(RenderScene);
     
