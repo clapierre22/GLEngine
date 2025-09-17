@@ -6,6 +6,7 @@
 #include <GL/glut.h>
 
 GLuint VBO;
+GLint ScaleLocation;
 
 typedef struct Vector3f;
 
@@ -18,6 +19,17 @@ static void RenderScene()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    static float scale = 0.0f;
+    static float delta = 0.001f;
+
+    scale += delta;
+    if ((scale >= 1.0f) || (scale <= -1.0f))
+    {
+        delta *= -1.0f;
+    }
+
+    glUniform1f(ScaleLocation, scale);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glEnableVertexAttribArray(0);
@@ -27,6 +39,8 @@ static void RenderScene()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
+
+    glutPostRedisplay();
 
     glutSwapBuffers();
 }
