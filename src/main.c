@@ -5,8 +5,11 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
+// #define SIDE
+#define ROTATE
+
 GLuint VBO;
-GLint ScaleLocation;
+GLint Location;
 
 // typedef struct Vector3f;
 
@@ -27,37 +30,75 @@ static void RenderScene()
     static float scale = 0.0f;
     static float delta = 0.001f;
 
-    scale += delta;
-    if ((scale >= 1.0f) || (scale <= -1.0f))
-    {
-        delta *= -1.0f;
-    }
+    #ifdef SIDE
+        scale += delta;
+        if ((scale >= 1.0f) || (scale <= -1.0f))
+        {
+            delta *= -1.0f;
+        }
+    #endif
+
+    #ifdef ROTATE
+        static float AngleRadians = 0.0f;
+        
+        AngleRadians += delta;
+        if ((AngleRadians >= 1.5708f) || AngleRadians <= -1.5708f)
+        {
+            delta *= -1.0f;
+        }
+    #endif
 
     Matrix4f Translation;
 
-    Translation.m[0][0] = 1.0f;
-    Translation.m[0][1] = 0.0f;
-    Translation.m[0][2] = 0.0f;
-    Translation.m[0][3] = sinf(scale);
+    // Side to side movement
+    #ifdef SIDE
+        Translation.m[0][0] = 1.0f;
+        Translation.m[0][1] = 0.0f;
+        Translation.m[0][2] = 0.0f;
+        Translation.m[0][3] = sinf(scale);
 
-    Translation.m[1][0] = 0.0f;
-    Translation.m[1][1] = 1.0f;
-    Translation.m[1][2] = 0.0f;
-    Translation.m[1][3] = 0.0f;
+        Translation.m[1][0] = 0.0f;
+        Translation.m[1][1] = 1.0f;
+        Translation.m[1][2] = 0.0f;
+        Translation.m[1][3] = 0.0f;
 
-    Translation.m[2][0] = 0.0f;
-    Translation.m[2][1] = 0.0f;
-    Translation.m[2][2] = 1.0f;
-    Translation.m[2][3] = 0.0f;
+        Translation.m[2][0] = 0.0f;
+        Translation.m[2][1] = 0.0f;
+        Translation.m[2][2] = 1.0f;
+        Translation.m[2][3] = 0.0f;
 
-    Translation.m[3][0] = 0.0f;
-    Translation.m[3][1] = 0.0f;
-    Translation.m[3][2] = 0.0f;
-    Translation.m[3][3] = 1.0f;
+        Translation.m[3][0] = 0.0f;
+        Translation.m[3][1] = 0.0f;
+        Translation.m[3][2] = 0.0f;
+        Translation.m[3][3] = 1.0f;
+    #endif
 
-    // glUniform1f(ScaleLocation, scale);
+    // Rotation
+    #ifdef ROTATE
+        Translation.m[0][0] = cosf(AngleRadians);
+        Translation.m[0][1] = -sinf(AngleRadians);
+        Translation.m[0][2] = 0.0f;
+        Translation.m[0][3] = 0.0f;
 
-    glUniformMatrix4fv(ScaleLocation, 1, GL_TRUE, &Translation.m[0][0]);
+        Translation.m[1][0] = sinf(AngleRadians);
+        Translation.m[1][1] = cosf(AngleRadians);
+        Translation.m[1][2] = 0.0f;
+        Translation.m[1][3] = 0.0f;
+
+        Translation.m[2][0] = 0.0f;
+        Translation.m[2][1] = 0.0f;
+        Translation.m[2][2] = 1.0f;
+        Translation.m[2][3] = 0.0f;
+
+        Translation.m[3][0] = 0.0f;
+        Translation.m[3][1] = 0.0f;
+        Translation.m[3][2] = 0.0f;
+        Translation.m[3][3] = 1.0f;
+    #endif
+
+    // glUniform1f(Location, scale);
+
+    glUniformMatrix4fv(Location, 1, GL_TRUE, &Translation.m[0][0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
