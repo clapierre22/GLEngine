@@ -8,9 +8,11 @@
 // #define SIDE
 // #define ROTATE
 // #define SCALE
-#define COLOR
+// #define COLOR
+#define INDEX
 
 GLuint VBO;
+GLuint IBO;
 GLint Location;
 
 // Global shader variables
@@ -150,6 +152,30 @@ static void RenderScene()
         Translation.m[3][3] = 1.0f;
     #endif
 
+    #ifdef INDEX
+        scale += 0.001f;
+
+        Translation.m[0][0] = cosf(scale);
+        Translation.m[0][1] = 0.0f;
+        Translation.m[0][2] = -sinf(scale);
+        Translation.m[0][3] = 0.0f;
+
+        Translation.m[1][0] = 0.0f;
+        Translation.m[1][1] = -1.0f;
+        Translation.m[1][2] = 0.0f;
+        Translation.m[1][3] = 0.0f;
+
+        Translation.m[2][0] = sinf(scale);
+        Translation.m[2][1] = 0.0f;
+        Translation.m[2][2] = cosf(scale);
+        Translation.m[2][3] = 0.0f;
+
+        Translation.m[3][0] = 0.0f;
+        Translation.m[3][1] = 0.0f;
+        Translation.m[3][2] = 0.0f;
+        Translation.m[3][3] = 1.0f;
+    #endif
+
     glUniform1f(Location, scale);
 
     glUniformMatrix4fv(Location, 1, GL_TRUE, &Translation.m[0][0]);
@@ -160,7 +186,10 @@ static void RenderScene()
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
 
@@ -177,23 +206,41 @@ static void InitGlutCallback()
 
 static void CreateVertexBuffer()
 {
-    Vector3f Vertices[3];
+    Vector3f Vertices[4];
 
     Vertices[0].x = -1.0f;
     Vertices[0].y = -1.0f;
     Vertices[0].z = 0.0f;
 
-    Vertices[1].x = 1.0f;
+    Vertices[1].x = 0.0f;
     Vertices[1].y = -1.0f;
-    Vertices[1].z = 0.0f;
+    Vertices[1].z = 1.0f;
 
-    Vertices[2].x = 0.0f;
-    Vertices[2].y = 1.0f;
+    Vertices[2].x = 1.0f;
+    Vertices[2].y = -1.0f;
     Vertices[2].z = 0.0f;
+
+    Vertices[3].x = 0.0f;
+    Vertices[3].y = 1.0f;
+    Vertices[3].z = 0.0f;
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+}
+
+static void CreateIndexBuffer()
+{
+    unsigned int Indices[] = {
+        0,3,1,
+        1,3,2,
+        2,3,0,
+        0,1,2
+    };
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 }
 
 static void AddShader(GLuint ShaderProgram, const char* ShaderText, GLenum ShaderType)
@@ -356,6 +403,7 @@ int main(int argc, char* argv[])
     glClearColor(Red, Green, Blue, Alpha);
 
     CreateVertexBuffer();
+    CreateIndexBuffer();
 
     CompileShaders();
 
