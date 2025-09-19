@@ -7,10 +7,15 @@
 
 // #define SIDE
 // #define ROTATE
-#define SCALE
+// #define SCALE
+#define COLOR
 
 GLuint VBO;
 GLint Location;
+
+// Global shader variables
+const char* VSFilename = "shader.vs";
+const char* FSFilename = "shader.fs";
 
 // typedef struct Vector3f;
 
@@ -29,9 +34,10 @@ static void RenderScene()
     glClear(GL_COLOR_BUFFER_BIT);
 
     static float scale = 0.0f;
-    static float delta = 0.001f;
+    // Matrix4f World;
 
     #if defined(SIDE) || defined(SCALE)
+        static float delta = 0.001f;
         scale += delta;
         if ((scale >= 1.0f) || (scale <= -1.0f))
         {
@@ -120,13 +126,37 @@ static void RenderScene()
         Translation.m[3][3] = 1.0f;
     #endif
 
-    // glUniform1f(Location, scale);
+    #ifdef COLOR
+        scale += 0.001f;
+
+        Translation.m[0][0] = sinf(scale);
+        Translation.m[0][1] = 0.0f;
+        Translation.m[0][2] = 0.0f;
+        Translation.m[0][3] = 0.0f;
+
+        Translation.m[1][0] = 0.0f;
+        Translation.m[1][1] = sinf(scale);
+        Translation.m[1][2] = 0.0f;
+        Translation.m[1][3] = 0.0f;
+
+        Translation.m[2][0] = 0.0f;
+        Translation.m[2][1] = 0.0f;
+        Translation.m[2][2] = sinf(scale);
+        Translation.m[2][3] = 0.0f;
+
+        Translation.m[3][0] = 0.0f;
+        Translation.m[3][1] = 0.0f;
+        Translation.m[3][2] = 0.0f;
+        Translation.m[3][3] = 1.0f;
+    #endif
+
+    glUniform1f(Location, scale);
 
     glUniformMatrix4fv(Location, 1, GL_TRUE, &Translation.m[0][0]);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
     glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -137,6 +167,12 @@ static void RenderScene()
     glutPostRedisplay();
 
     glutSwapBuffers();
+}
+
+static void InitGlutCallback()
+{
+    glutDisplayFunc(RenderScene);
+    glutIdleFunc(RenderScene);
 }
 
 static void CreateVertexBuffer()
@@ -193,10 +229,6 @@ static void AddShader(GLuint ShaderProgram, const char* ShaderText, GLenum Shade
 
     glAttachShader(ShaderProgram, ShaderObj);
 }
-
-// Global shader variables
-const char* VSFilename = "shader.vs";
-const char* FSFilename = "shader.fs";
 
 static void CompileShaders()
 {
@@ -309,6 +341,8 @@ int main(int argc, char* argv[])
     glutInitWindowPosition(x, y);
 
     glutCreateWindow("Test Window");
+
+    InitGlutCallback();
     
     // Initialize GLEW after creating OpenGL context
     GLenum err = glewInit();
@@ -325,7 +359,7 @@ int main(int argc, char* argv[])
 
     CompileShaders();
 
-    glutDisplayFunc(RenderScene);
+    // glutDisplayFunc(RenderScene);
     
     glutMainLoop();
 
